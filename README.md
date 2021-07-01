@@ -19,4 +19,4 @@ _______________________________
 - The clock cycles _have_ to be accurate according to the instruction you wish to run or the program will fail.
 - Use this [reference manual](http://www.obelisk.me.uk/6502/reference.html) given above to find the number cycles for a particular instruction belonging to a specific addressing mode. 
 
-- Another resource to help with addresing modes in the 6502 would be [this](http://www.emulator101.com/6502-addressing-modes.html)
+- Another resource to help with addresing modes in the 6502 would be [this](http://www.emulator101.com/6502-addressing-modes.html).
