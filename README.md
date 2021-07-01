@@ -16,6 +16,7 @@ _______________________________
 
 - These are the "tests" I was talking about. To use the program, just call the `execute_instruction()` function which takes the number of clock cycles and the an instance of the memory structure as parameters. 
 
-- The clock cycles _have_ to be accurate according to the instruction you wish to run or the program will fail; use this [reference manual] (http://www.obelisk.me.uk/6502/reference.html) given above to find the number cycles for a particular instruction belonging to a specific addressing mode. 
+- The clock cycles _have_ to be accurate according to the instruction you wish to run or the program will fail.
+- Use this [reference manual](http://www.obelisk.me.uk/6502/reference.html) given above to find the number cycles for a particular instruction belonging to a specific addressing mode. 
 
 - Another resource to help with addresing modes in the 6502 would be [this](http://www.emulator101.com/6502-addressing-modes.html)
