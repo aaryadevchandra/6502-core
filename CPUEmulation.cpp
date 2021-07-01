@@ -280,7 +280,7 @@ int main()
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
 
-	//LDA immediate tets
+	//LDA immediate test
 	/*mem.memory_block[obj.program_counter] = 0xA9;
 	mem.memory_block[obj.program_counter + 1] = 95;*/
 
