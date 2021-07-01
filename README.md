@@ -8,3 +8,14 @@ This is first push so the tests are in the file itself, feel free to play around
 
 I have used [this](http://www.obelisk.me.uk/6502/reference.html) site as reference for the emulator. See you soon, adios!
 
+
+# How To Use
+_______________________________
+
+- The assembly according to which the instructions will be called is hardcoded in the code itself; the opcodes for specific instructions and their operands have been manually entered into memory which is just a byte array. 
+
+- These are the "tests" I was talking about. To use the program, just call the `execute_instruction()` function which takes the number of clock cycles and the an instance of the memory structure as parameters. 
+
+- The clock cycles _have_ to be accurate according to the instruction you wish to run or the program will fail; use this [reference manual (http://www.obelisk.me.uk/6502/reference.html) given above to find the number cycles for a particular instruction belonging to a specific addressing mode. 
+
+- Another resource to help with addresing modes in the 6502 would be [this](http://www.emulator101.com/6502-addressing-modes.html)
