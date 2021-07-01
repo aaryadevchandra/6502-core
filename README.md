@@ -12,9 +12,10 @@ I have used [this](http://www.obelisk.me.uk/6502/reference.html) site as referen
 # How To Use
 _______________________________
 
-- The assembly according to which the instructions will be called is hardcoded in the code itself; the opcodes for specific instructions and their operands have been manually entered into memory which is just a byte array. 
+- The assembly according to which the instructions will be called is hardcoded in the code itself. 
+- The assembler would usually arrange your assembly code in memory, however I have done that job by manually entering it into memory i.e. opcodes for specific instructions and their operands have been manually assigned to certain indices of the memory byte array. 
 
-- These are the "tests" I was talking about. To use the program, just call the `execute_instruction()` function which takes the number of clock cycles and the an instance of the memory structure as parameters. 
+- These are the "tests" I was talking about. To use the program, just call the `execute_instruction()` function which takes the number of clock cycles and then an instance of the memory structure as parameters. 
 
 - The clock cycles _have_ to be accurate according to the instruction you wish to run or the program will fail.
 - Use this [reference manual](http://www.obelisk.me.uk/6502/reference.html) given above to find the number cycles for a particular instruction belonging to a specific addressing mode. 
