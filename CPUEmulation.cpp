@@ -305,10 +305,18 @@ struct cpu
 			}
 			break;
 
-
+			//4 cycles
 			case LDX_ZPY:
 			{
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
 
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
+
+				X = readValue_on_address<Word>(mem, effective_addr);
+
+				LDA_SET_FLAGS();
 			}
 			break;
 
