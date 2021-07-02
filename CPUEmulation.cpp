@@ -368,20 +368,7 @@ struct cpu
 			}
 			break;
 
-
-
-
-
-
-
 			//LDY
-
-
-
-
-
-
-
 
 
 
