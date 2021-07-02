@@ -1,12 +1,6 @@
 #include<iostream>
+#include "type_definitions.h"
 using namespace std;
-
-
-using Byte = unsigned char;
-using Word = unsigned short int;
-using DWord = unsigned int;
-
-
 
 //program counter - will hold the memory address of the next instruction to be executed
 //instruction register - will hold the current instruction (opcode) to be executed 
@@ -126,10 +120,8 @@ struct cpu
 			//2 cycles
 			case LDA_IM:
 			{
-				//fetching the immediate value to be stored
-				Byte immediate_value = fetch_byte(mem);
-				A = immediate_value;
-
+				//fetching the immediate value to be stored and assigning it to A register
+				A = fetch_byte(mem);
 				LDA_SET_FLAGS();
 			}
 			break;
@@ -137,12 +129,11 @@ struct cpu
 			//3 cycles
 			case LDA_ZP:
 			{
-				//fetching the zero page address where the value to be stored will be present
-				Byte ZP_address = fetch_byte(mem);
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
 
 				//fetching the byte from the zero page address we just fetched from memory
-				A = readValue_on_address<Byte>(mem, ZP_address);
-
+				A = readValue_on_address<Byte>(mem, effective_addr); 
 				LDA_SET_FLAGS();
 			}
 			break;
@@ -150,14 +141,13 @@ struct cpu
 			//4 cycles
 			case LDA_ZPX:
 			{
-				//fetching zero page address
-				Byte ZP_address = fetch_byte(mem);
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
 
-				Word ZPX_addr = ZP_address * 0x100 + X;
-				cycles--;//for fetching X
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
 
-				//reading value stored at ZPX_address
-				A = readValue_on_address<Word>(mem, ZPX_addr);
+				A = readValue_on_address<Word>(mem, effective_addr);
 
 				LDA_SET_FLAGS();
 			}
@@ -179,7 +169,6 @@ struct cpu
 				//reading value stored at the previously formed 16-bit address
 				A = readValue_on_address<Word>(mem, absolute_address);
 
-
 				LDA_SET_FLAGS();
 			}
 			break;
@@ -196,14 +185,12 @@ struct cpu
 				//forming a 16-bit address by adding the 2 individual 8-bit addresses
 				Word absolute_address = address_byte2 * 0x100 + address_byte1;
 
-				DWord ABX_addr = absolute_address + X;
-
-				if (ABX_addr > 0xffff)
+				if (absolute_address + X > 0xffff)
 				{
 					cycles--;
 				}
 
-				A = readValue_on_address<DWord>(mem, ABX_addr);
+				A = readValue_on_address<DWord>(mem, absolute_address + X);
 
 				LDA_SET_FLAGS();
 
@@ -221,14 +208,12 @@ struct cpu
 				//forming a 16-bit address by adding the 2 individual 8-bit addresses
 				Word absolute_address = address_byte2 * 0x100 + address_byte1;
 
-				DWord ABY_addr = absolute_address + Y;
-
-				if (ABY_addr > 0xffff)
+				if (absolute_address + Y > 0xffff)
 				{
 					cycles--;
 				}
 
-				A = readValue_on_address<DWord>(mem, ABY_addr);
+				A = readValue_on_address<DWord>(mem, absolute_address + Y);
 
 				LDA_SET_FLAGS();
 			}
@@ -237,9 +222,28 @@ struct cpu
 			//6 cycles
 			case LDA_INX:
 			{
-				A = readValue_on_address<Word>(mem, readValue_on_address<Word>(mem, (fetch_byte(mem) + X)));
-				cycles--;//for reading X reg
-				cycles--;//for writing to A reg
+				Byte BAL = fetch_byte(mem);
+
+				Word effective_addr = BAL + X;
+
+				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
+				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
+
+
+				//discarded data cycle remaining
+
+				Word fetch_addr;
+				if (effective_addr_L > 0xff)
+				{
+					fetch_addr = effective_addr_H * 0x100 + effective_addr_L;
+				}
+
+				else
+				{
+					fetch_addr = effective_addr_L;
+				}
+
+				A = readValue_on_address<Word>(mem, fetch_addr);
 
 				LDA_SET_FLAGS();
 			}
@@ -248,9 +252,21 @@ struct cpu
 			//6 cycles
 			case LDA_INY:
 			{
-				A = readValue_on_address<Word>(mem, readValue_on_address<Word>(mem, (fetch_byte(mem) + Y)));
-				cycles--;//for reading Y reg
-				cycles--;//for writing to A reg
+
+				Byte IAL = fetch_byte(mem);
+
+				Byte BAL = readValue_on_address<Byte>(mem, IAL);					
+				Byte BAH = readValue_on_address<Byte>(mem, IAL + 1);
+
+				DWord fetch_addr = BAH * 0x100 + BAL + Y;
+
+				if (fetch_addr > 0xffff)
+				{
+					cycles--;
+				}
+					
+				A = readValue_on_address<DWord>(mem, fetch_addr);
+			
 
 				LDA_SET_FLAGS();
 			}
@@ -279,56 +295,5 @@ int main()
 	mem.memory_block[0xfffd] = 0x10;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
-
-	//LDA immediate test
-	/*mem.memory_block[obj.program_counter] = 0xA9;
-	mem.memory_block[obj.program_counter + 1] = 95;*/
-
-
-
-	//LDA zero page instruction test
-	/*mem.memory_block[obj.program_counter] = 0xa5;
-	mem.memory_block[obj.program_counter + 1] = 0x67;
-	mem.memory_block[0x67] = 78;*/
-
-	//LDA ZPX test
-	/*mem.memory_block[obj.program_counter] = 0xB5;
-	mem.memory_block[obj.program_counter + 1] = 0x43;
-	obj.X = 0x34;
-	mem.memory_block[0x4334] = 69;*/
-	
-	//LDA_AB test
-	/*mem.memory_block[0x1000] = 0xAD;
-	mem.memory_block[0x1000 + 1] = 0xca;
-	mem.memory_block[0x1000 + 2] = 0xac;
-	mem.memory_block[0xacca] = 69;*/
-
-	//LDA_ABX test
-	/*mem.memory_block[0x1000] = 0xBD;
-	mem.memory_block[0x1000 + 1] = 0xff;
-	mem.memory_block[0x1000 + 2] = 0xff;
-	obj.X = 0x1;
-	mem.memory_block[0xffff + obj.X] = 69;*/
-
-	//LDA_ABY test
-	/*mem.memory_block[0x1000] = 0xB9;
-	mem.memory_block[0x1000 + 1] = 0xff;
-	mem.memory_block[0x1000 + 2] = 0xff;
-	obj.Y = 0x1;
-	mem.memory_block[0xffff + obj.Y] = 69;*/
-
-	//LDA indirect indexed X test
-	/*mem.memory_block[0x1000] = 0xA1;
-	mem.memory_block[0x1000 + 1] = 0x20;
-	obj.X = 0x04;
-	mem.memory_block[0x24] = 0x70;
-	mem.memory_block[0x70] = 231;*/
-
-	//LDA indirect indexed Y test
-	/*mem.memory_block[0x1000] = 0xB1;
-	mem.memory_block[0x1000 + 1] = 0x20;
-	obj.X = 0x04;
-	mem.memory_block[0x24] = 0x70;
-	mem.memory_block[0x70] = 231;*/
 
 }
