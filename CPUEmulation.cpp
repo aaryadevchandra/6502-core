@@ -71,7 +71,13 @@ struct cpu
 		LDA_ABX = 0xBD,
 		LDA_ABY = 0xB9,
 		LDA_INX = 0xA1,
-		LDA_INY = 0xB1;
+		LDA_INY = 0xB1,
+
+		LDX_IM = 0xA2,
+		LDX_ZP = 0xA6,
+		LDX_ZPY = 0xB6,
+		LDX_AB = 0xAE,
+		LDX_ABY = 0xBE;
 
 
 	void LDA_SET_FLAGS()
@@ -230,6 +236,8 @@ struct cpu
 				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
 				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
 
+				cycles--;
+
 				Word fetch_addr;
 				if (effective_addr_L > 0xff)
 				{
@@ -269,6 +277,90 @@ struct cpu
 				LDA_SET_FLAGS();
 			}
 			break;
+
+
+
+			//LDX
+
+
+
+			//2 cycles
+			case LDX_IM:
+			{
+				//fetching the immediate value to be stored and assigning it to A register
+				X = fetch_byte(mem);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//3 cycles
+			case LDX_ZP:
+			{
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
+
+				//fetching the byte from the zero page address we just fetched from memory
+				X = readValue_on_address<Byte>(mem, effective_addr);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+
+			case LDX_ZPY:
+			{
+
+			}
+			break;
+
+			//4 cycles
+			case LDX_AB:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+
+				//reading value stored at the previously formed 16-bit address
+				X = readValue_on_address<Word>(mem, absolute_address);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//4 cycles (+1 if page crossed)
+			case LDX_ABY:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + Y > 0xffff)
+				{
+					cycles--;
+				}
+
+				X = readValue_on_address<DWord>(mem, absolute_address + Y);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+
+
+
+
+
+
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
