@@ -225,12 +225,10 @@ struct cpu
 				Byte BAL = fetch_byte(mem);
 
 				Word effective_addr = BAL + X;
+				cycles--;
 
 				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
 				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
-
-
-				//discarded data cycle remaining
 
 				Word fetch_addr;
 				if (effective_addr_L > 0xff)
