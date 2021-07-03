@@ -1,4 +1,5 @@
 # 6502-emulator
+_____________________________________
 
 Currently the project is in progress. The 6502 has 56 instructions out of which I have implemented 4 (LDA, LDX, LDY, ADC with all addressing modes). The project is clock cycle accurate and ... well yeah that's all for now. 
 
