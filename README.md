@@ -10,7 +10,7 @@ I have used [this](http://www.obelisk.me.uk/6502/reference.html) site as referen
 
 
 # How To Use
-_______________________________
+__________________________________
 
 - The assembly according to which the instructions will be called is hardcoded in the code itself. 
 - The assembler would usually arrange your assembly code in memory, however I have done that job by manually entering it into memory i.e. opcodes for specific instructions and their operands have been manually assigned to certain indices of the memory byte array. 
