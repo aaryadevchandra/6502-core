@@ -96,6 +96,21 @@ struct cpu
 		NF = (A & 0b01000000) > 0;
 	}
 
+	void ADC_SET_FLAGS()
+	{
+		if (A > 0xffff)
+		{
+			CF = 1;
+		}
+
+		if (A == 0)
+		{
+			ZF = 0;
+		}
+
+		NF = (A & 0b01000000) > 0;
+	}
+
 
 	//fetch byte from memory
 	Byte fetch_byte(Memory mem)
@@ -241,8 +256,6 @@ struct cpu
 				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
 				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
 
-				cycles--;
-
 				Word fetch_addr;
 				if (effective_addr_L > 0xff)
 				{
@@ -368,7 +381,20 @@ struct cpu
 			}
 			break;
 
+
+
+
+
+
+
 			//LDY
+
+
+
+
+
+
+
 
 
 
@@ -448,6 +474,172 @@ struct cpu
 				Y = readValue_on_address<DWord>(mem, absolute_address + Y);
 
 				LDA_SET_FLAGS();
+			}
+			break;
+
+
+
+
+
+
+
+
+
+			//ADC
+
+
+
+
+
+
+
+
+
+
+
+			case ADC_IM:
+			{
+				A += fetch_byte(mem);
+
+				ADC_SET_FLAGS();
+				
+			}
+			break;
+
+			case ADC_ZP:
+			{
+
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
+
+				//fetching the byte from the zero page address we just fetched from memory
+				A += readValue_on_address<Byte>(mem, effective_addr);
+				ADC_SET_FLAGS();
+
+			}
+			break;
+
+			case ADC_ZPX:
+			{
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
+
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
+
+				A += readValue_on_address<Word>(mem, effective_addr);
+
+				ADC_SET_FLAGS();
+			}
+			break;
+
+			case ADC_AB:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+
+				//reading value stored at the previously formed 16-bit address
+				A += readValue_on_address<Word>(mem, absolute_address);
+
+				ADC_SET_FLAGS();
+			}
+			break;
+
+			case ADC_ABX:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + X > 0xffff)
+				{
+					cycles--;
+				}
+
+				A += readValue_on_address<DWord>(mem, absolute_address + X);
+
+				ADC_SET_FLAGS();
+			}
+			break;
+
+
+			case ADC_ABY:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + Y > 0xffff)
+				{
+					cycles--;
+				}
+
+				A += readValue_on_address<DWord>(mem, absolute_address + Y);
+
+				ADC_SET_FLAGS();
+			}
+			break;
+
+			case ADC_INX:
+			{
+				Byte BAL = fetch_byte(mem);
+
+				Word effective_addr = BAL + X;
+				cycles--;
+
+				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
+				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
+
+				Word fetch_addr;
+				if (effective_addr_L > 0xff)
+				{
+					fetch_addr = effective_addr_H * 0x100 + effective_addr_L;
+				}
+
+				else
+				{
+					fetch_addr = effective_addr_L;
+				}
+
+				A += readValue_on_address<Word>(mem, fetch_addr);
+
+				ADC_SET_FLAGS();
+			}
+			break;
+
+
+			case ADC_INY:
+			{
+				Byte IAL = fetch_byte(mem);
+
+				Byte BAL = readValue_on_address<Byte>(mem, IAL);
+				Byte BAH = readValue_on_address<Byte>(mem, IAL + 1);
+
+				DWord fetch_addr = BAH * 0x100 + BAL + Y;
+
+				if (fetch_addr > 0xffff)
+				{
+					cycles--;
+				}
+
+				A += readValue_on_address<DWord>(mem, fetch_addr);
 			}
 			break;
 
