@@ -73,6 +73,15 @@ struct cpu
 		AND_INX = 0x21,
 		AND_INY = 0x31,
 
+		CMP_IM = 0xC9,
+		CMP_ZP = 0xC5,
+		CMP_ZPX = 0xD5,
+		CMP_AB = 0xCD,
+		CMP_ABX = 0xDD,
+		CMP_ABY = 0xD9,
+		CMP_INX = 0xC1,
+		CMP_INY = 0xD1,
+
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
 		LDA_ZPX = 0xB5,
@@ -99,7 +108,7 @@ struct cpu
 	{
 		if (A == 0)
 		{
-			ZF = 0;
+			ZF = 1;
 		}
 
 		NF = (A & 0b01000000) > 0;
@@ -114,12 +123,26 @@ struct cpu
 
 		if (A == 0)
 		{
-			ZF = 0;
+			ZF = 1;
 		}
 
 		NF = (A & 0b01000000) > 0;
 	}
 
+	void CMP_SET_FLAGS(Byte A, Byte cmp_byte)
+	{
+		if (A >= cmp_byte)
+		{
+			CF = 1;
+		}
+
+		if (A == cmp_byte)
+		{
+			ZF = 1;
+		}
+
+		NF = (A & 0b01000000) > 0;
+	}
 
 	//fetch byte from memory
 	Byte fetch_byte(Memory mem)
@@ -804,6 +827,167 @@ struct cpu
 			break;
 
 
+			//CMP
+
+			case CMP_IM:
+			{
+				Byte CMP_byte = fetch_byte(mem);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+				
+				cin.get();
+
+			}
+			break;
+
+			case CMP_ZP:
+			{
+
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
+
+				//fetching the byte from the zero page address we just fetched from memory
+				Byte CMP_byte = readValue_on_address<Byte>(mem, effective_addr);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+				
+
+			}
+			break;
+
+			case CMP_ZPX:
+			{
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
+
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
+
+				Byte CMP_byte = readValue_on_address<Word>(mem, effective_addr);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+
+				
+			}
+			break;
+
+			case CMP_AB:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+
+				//reading value stored at the previously formed 16-bit address
+				Byte CMP_byte = readValue_on_address<Word>(mem, absolute_address);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+
+				
+			}
+			break;
+
+			case CMP_ABX:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + X > 0xffff)
+				{
+					cycles--;
+				}
+
+				Byte CMP_byte = readValue_on_address<DWord>(mem, absolute_address + X);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+			}
+			break;
+
+
+			case CMP_ABY:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + Y > 0xffff)
+				{
+					cycles--;
+				}
+
+				Byte CMP_byte = readValue_on_address<DWord>(mem, absolute_address + Y);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+			}
+			break;
+
+			case CMP_INX:
+			{
+				Byte BAL = fetch_byte(mem);
+
+				Word effective_addr = BAL + X;
+				cycles--;
+
+				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
+				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
+
+				Word fetch_addr;
+				if (effective_addr_L > 0xff)
+				{
+					fetch_addr = effective_addr_H * 0x100 + effective_addr_L;
+				}
+
+				else
+				{
+					fetch_addr = effective_addr_L;
+				}
+
+				Byte CMP_byte = readValue_on_address<Word>(mem, fetch_addr);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+
+			}
+			break;
+
+
+			case CMP_INY:
+			{
+				Byte IAL = fetch_byte(mem);
+
+				Byte BAL = readValue_on_address<Byte>(mem, IAL);
+				Byte BAH = readValue_on_address<Byte>(mem, IAL + 1);
+
+				DWord fetch_addr = BAH * 0x100 + BAL + Y;
+
+				if (fetch_addr > 0xffff)
+				{
+					cycles--;
+				}
+
+				Byte CMP_byte = readValue_on_address<DWord>(mem, fetch_addr);
+
+				CMP_SET_FLAGS(A, CMP_byte);
+
+				
+
+			}
+			break;
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
@@ -828,6 +1012,9 @@ int main()
 	mem.memory_block[0xfffd] = 0x10;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
+
+
+	obj.execute_instruction(2, mem);
 
 
 }
