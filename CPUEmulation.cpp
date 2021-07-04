@@ -64,6 +64,15 @@ struct cpu
 		ADC_INX = 0x61,
 		ADC_INY = 0x71,
 
+		AND_IM = 0x29,
+		AND_ZP = 0x25,
+		AND_ZPX = 0x35,
+		AND_AB = 0x2D,
+		AND_ABX = 0x3D,
+		AND_ABY = 0x39,
+		AND_INX = 0x21,
+		AND_INY = 0x31,
+
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
 		LDA_ZPX = 0xB5,
@@ -643,6 +652,159 @@ struct cpu
 			}
 			break;
 
+			//AND 
+			
+			
+			case AND_IM:
+			{
+				A &= fetch_byte(mem);
+
+				LDA_SET_FLAGS();
+
+			}
+			break;
+
+			case AND_ZP:
+			{
+
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
+
+				//fetching the byte from the zero page address we just fetched from memory
+				A &= readValue_on_address<Byte>(mem, effective_addr);
+				LDA_SET_FLAGS();
+
+			}
+			break;
+
+			case AND_ZPX:
+			{
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
+
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
+
+				A &= readValue_on_address<Word>(mem, effective_addr);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case AND_AB:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+
+				//reading value stored at the previously formed 16-bit address
+				A &= readValue_on_address<Word>(mem, absolute_address);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case AND_ABX:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + X > 0xffff)
+				{
+					cycles--;
+				}
+
+				A &= readValue_on_address<DWord>(mem, absolute_address + X);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+
+			case AND_ABY:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + Y > 0xffff)
+				{
+					cycles--;
+				}
+
+				A &= readValue_on_address<DWord>(mem, absolute_address + Y);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case AND_INX:
+			{
+				Byte BAL = fetch_byte(mem);
+
+				Word effective_addr = BAL + X;
+				cycles--;
+
+				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
+				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
+
+				Word fetch_addr;
+				if (effective_addr_L > 0xff)
+				{
+					fetch_addr = effective_addr_H * 0x100 + effective_addr_L;
+				}
+
+				else
+				{
+					fetch_addr = effective_addr_L;
+				}
+
+				A &= readValue_on_address<Word>(mem, fetch_addr);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+
+			case AND_INY:
+			{
+				Byte IAL = fetch_byte(mem);
+
+				Byte BAL = readValue_on_address<Byte>(mem, IAL);
+				Byte BAH = readValue_on_address<Byte>(mem, IAL + 1);
+
+				DWord fetch_addr = BAH * 0x100 + BAL + Y;
+
+				if (fetch_addr > 0xffff)
+				{
+					cycles--;
+				}
+
+				A &= readValue_on_address<DWord>(mem, fetch_addr);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+
+
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
 				exit(0);
@@ -666,5 +828,6 @@ int main()
 	mem.memory_block[0xfffd] = 0x10;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
+
 
 }
