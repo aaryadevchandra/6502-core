@@ -1272,7 +1272,7 @@ struct cpu
 
 			case LSR_ZPX:
 			{
-				/*Byte addr = fetch_byte(mem);
+				Byte addr = fetch_byte(mem);
 
 				readValue_on_address<Byte>(mem, addr);
 
@@ -1285,14 +1285,14 @@ struct cpu
 
 				explicit_write_back(effective_value, mem, effective_addr);
 
-				LSR_SET_FLAGS(effective_value);*/
+				LSR_SET_FLAGS(effective_value);
 
 			}
 			break;
 
 			case LSR_AB:
 			{
-				/*Byte low_byte = fetch_byte(mem);
+				Byte low_byte = fetch_byte(mem);
 				Byte high_byte = fetch_byte(mem);
 
 				Word effective_addr = high_byte * 0x100 + low_byte;
@@ -1305,7 +1305,7 @@ struct cpu
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
 
-				LSR_SET_FLAGS(effective_value);*/
+				LSR_SET_FLAGS(effective_value);
 			}
 			break;
 
