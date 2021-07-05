@@ -82,6 +82,11 @@ struct cpu
 		CMP_INX = 0xC1,
 		CMP_INY = 0xD1,
 
+		DEC_ZP = 0xC6,
+		DEC_ZPX = 0xD6,
+		DEC_AB = 0xCE,
+		DEC_ABX = 0xDE,
+
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
 		LDA_ZPX = 0xB5,
@@ -144,6 +149,16 @@ struct cpu
 		NF = (A & 0b01000000) > 0;
 	}
 
+	void DEC_SET_FLAGS(Byte result)
+	{
+		if (result == 0)
+		{
+			ZF = 1;
+		}
+
+		NF = (A & 0b01000000) > 0;
+	}
+
 	//fetch byte from memory
 	Byte fetch_byte(Memory mem)
 	{
@@ -160,6 +175,13 @@ struct cpu
 		cycles--;
 
 		return valueOnAddress;
+	}
+
+	template<typename T>
+	void explicit_write_back(T value, Memory &mem, T addr)
+	{
+		mem.memory_block[addr] = value;
+		cycles--;
 	}
 
 	//fetching byte from memory and executing it
@@ -844,7 +866,7 @@ struct cpu
 			{
 
 				//fetch_byte() fetches the zero page address
-				Word effective_addr = fetch_byte(mem);
+				Byte effective_addr = fetch_byte(mem);
 
 				//fetching the byte from the zero page address we just fetched from memory
 				Byte CMP_byte = readValue_on_address<Byte>(mem, effective_addr);
@@ -989,6 +1011,90 @@ struct cpu
 			}
 			break;
 
+
+			//DEC
+
+			case DEC_ZP:
+			{
+				Byte zp_address = fetch_byte(mem);
+
+				Byte value_at_zp_addr = readValue_on_address<Byte>(mem, zp_address);
+
+				explicit_write_back<Byte>(value_at_zp_addr, mem, zp_address);
+				value_at_zp_addr -= 1;
+
+				explicit_write_back<Byte>(value_at_zp_addr, mem, zp_address);
+
+				DEC_SET_FLAGS(value_at_zp_addr);
+
+			}
+
+			break;
+
+			case DEC_ZPX:
+			{
+				Byte zp_addr = fetch_byte(mem);
+
+				Byte zp_val = readValue_on_address<Byte>(mem, zp_addr);
+				
+				Byte effective_addr = zp_addr + X;
+
+				Byte effective_val = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_val, mem, effective_addr);
+				effective_val -= 1;
+
+				explicit_write_back<Byte>(effective_val, mem, effective_addr);
+
+
+				DEC_SET_FLAGS(effective_val);
+
+				
+			}
+			break;
+
+			case DEC_AB:
+			{
+				Byte BAL = fetch_byte(mem);
+				Byte BAH = fetch_byte(mem);
+
+				Word effective_addr = BAH * 0x100 + BAL;
+
+				Byte effective_val = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+				effective_val -= 1;
+				
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+
+				DEC_SET_FLAGS(effective_val);
+
+			}
+			break;
+				
+			case DEC_ABX:
+			{
+				Byte BAL = fetch_byte(mem);
+				Byte BAH = fetch_byte(mem);
+
+				Word effective_addr = BAH * 0x100 + BAL + X;
+
+				Byte effective_val = readValue_on_address<Word>(mem, effective_addr);
+
+				effective_val = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+				effective_val -= 1;
+
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+
+
+				DEC_SET_FLAGS(effective_val);
+
+			}
+			break;
+			
+
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
 				exit(0);
@@ -1012,9 +1118,5 @@ int main()
 	mem.memory_block[0xfffd] = 0x10;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
-
-
-	obj.execute_instruction(2, mem);
-
 
 }
