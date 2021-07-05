@@ -103,6 +103,14 @@ struct cpu
 
 		JSR_AB = 0x20,
 
+		CPX_IM = 0xE0,
+		CPX_ZP = 0xE4,
+		CPX_AB = 0xEC,
+
+		CPY_IM = 0xC0,
+		CPY_ZP = 0xC4,
+		CPY_AB = 0xCC,
+
 		LSR_A = 0x4A,
 		LSR_ZP = 0x46,
 		LSR_ZPX = 0x56,
@@ -168,7 +176,7 @@ struct cpu
 			ZF = 1;
 		}
 
-		NF = (A & 0b01000000) > 0;
+		NF = (A & 0b10000000) > 0;
 	}
 
 	void DEC_INC_SET_FLAGS(Byte result)
@@ -178,7 +186,21 @@ struct cpu
 			ZF = 1;
 		}
 
-		NF = (result & 0b01000000) > 0;
+		NF = (result & 0b10000000) > 0;
+	}
+
+	void CPI(Byte register_val, Byte cmp_val)
+	{
+		if (register_val >= cmp_val)
+		{
+			CF = 1;
+		}
+
+		if (register_val == cmp_val)
+		{
+			ZF = 1;
+
+		}
 	}
 
 	//fetch byte from memory
@@ -845,8 +867,6 @@ struct cpu
 				Byte CMP_byte = fetch_byte(mem);
 
 				CMP_SET_FLAGS(A, CMP_byte);
-				
-				cin.get();
 
 			}
 			break;
@@ -1329,10 +1349,77 @@ struct cpu
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
 
 				LSR_SET_FLAGS(effective_value);
-
-
 			}
 			break;
+
+			//CPX
+
+			case CPX_IM:
+			{
+				Byte cmp_byte = fetch_byte(mem);
+
+				CPI(X, cmp_byte);
+			}
+			break;
+
+			case CPX_ZP:
+			{
+				Byte zp_addr = fetch_byte(mem);
+
+				Byte zp_addr_val = readValue_on_address<Byte>(mem, zp_addr);
+
+				CPI(X, zp_addr_val);
+			}
+			break;
+
+
+			case CPX_AB:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				CPI(X, effective_value);
+			}
+			break;
+
+
+			//CPY
+
+			case CPY_IM:
+			{
+				Byte cmp_byte = fetch_byte(mem);
+
+				CPI(X, cmp_byte);
+			}
+			break;
+
+			case CPY_ZP:
+			{
+				Byte zp_addr = fetch_byte(mem);
+
+				Byte zp_addr_val = readValue_on_address<Byte>(mem, zp_addr);
+
+				CPI(X, zp_addr_val);
+			}
+			break;
+
+			case CPY_AB:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				CPI(X, effective_value);
+			}
+			break;
+			
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
