@@ -98,6 +98,11 @@ struct cpu
 		INX_IMPLIED = 0xE8,
 		INY_IMPLIED = 0xC8,
 
+		JMP_AB = 0x4C,
+		JMP_IN = 0x6C,
+
+		JSR_AB = 0x20,
+
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
 		LDA_ZPX = 0xB5,
@@ -446,22 +451,7 @@ struct cpu
 			}
 			break;
 
-
-
-
-
-
-
 			//LDY
-
-
-
-
-
-
-
-
-
 
 			//2 cycles
 			case LDY_IM:
@@ -542,25 +532,7 @@ struct cpu
 			}
 			break;
 
-
-
-
-
-
-
-
-
 			//ADC
-
-
-
-
-
-
-
-
-
-
 
 			case ADC_IM:
 			{
@@ -1224,6 +1196,49 @@ struct cpu
 			}
 			break;
 
+			case JMP_AB:
+			{
+				Byte PCL = fetch_byte(mem);
+				Byte PCH = fetch_byte(mem);
+
+				Word PC_JMP_ADDR = PCH * 0x100 + PCL;
+
+				program_counter = PC_JMP_ADDR;
+
+			}
+			break;
+			
+			case JMP_IN:
+			{
+				Byte indirect_addr_low = fetch_byte(mem);
+				Byte indirect_addr_high = fetch_byte(mem);
+
+				Word pointer_addr = indirect_addr_high * 0x100 + indirect_addr_low;
+
+				Byte PCL = readValue_on_address<Word>(mem, pointer_addr);
+				Byte PCH = readValue_on_address<Word>(mem, pointer_addr + 1);
+
+				Word PC_JMP_ADDR = PCH * 0x100 + PCL;
+
+				program_counter = PC_JMP_ADDR;
+			}
+
+			case JSR_AB:
+			{
+				Byte PCL = fetch_byte(mem);
+				Byte PCH = fetch_byte(mem);
+				
+				explicit_write_back(PCH, mem, stack_pointer);
+				stack_pointer--;
+
+				explicit_write_back(PCL, mem, stack_pointer);
+				stack_pointer--;
+
+				Word effective_addr = PCL * 0x100 + PCH;
+
+				explicit_write_back(effective_addr, mem, program_counter);
+			}
+			break;
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
@@ -1233,6 +1248,13 @@ struct cpu
 		}
 
 	}
+
+	Word getActualStackAddr(Byte stack_ptr)
+	{
+		Word Bit16_addr = 0x100 + stack_pointer;
+		return Bit16_addr;
+	}
+
 };
 
 int main()
@@ -1248,5 +1270,4 @@ int main()
 	mem.memory_block[0xfffd] = 0x10;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
-
 }
