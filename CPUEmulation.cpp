@@ -87,6 +87,17 @@ struct cpu
 		DEC_AB = 0xCE,
 		DEC_ABX = 0xDE,
 
+		DEX_IMPLIED = 0xCA,
+		DEY_IMPLIED = 0x88,
+
+		INC_ZP = 0xE6,
+		INC_ZPX = 0xF6,
+		INC_AB = 0xEE,
+		INC_ABX = 0xFE,
+
+		INX_IMPLIED = 0xE8,
+		INY_IMPLIED = 0xC8,
+
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
 		LDA_ZPX = 0xB5,
@@ -149,7 +160,7 @@ struct cpu
 		NF = (A & 0b01000000) > 0;
 	}
 
-	void DEC_SET_FLAGS(Byte result)
+	void DEC_INC_SET_FLAGS(Byte result)
 	{
 		if (result == 0)
 		{
@@ -1025,7 +1036,7 @@ struct cpu
 
 				explicit_write_back<Byte>(value_at_zp_addr, mem, zp_address);
 
-				DEC_SET_FLAGS(value_at_zp_addr);
+				DEC_INC_SET_FLAGS(value_at_zp_addr);
 
 			}
 
@@ -1047,7 +1058,7 @@ struct cpu
 				explicit_write_back<Byte>(effective_val, mem, effective_addr);
 
 
-				DEC_SET_FLAGS(effective_val);
+				DEC_INC_SET_FLAGS(effective_val);
 
 				
 			}
@@ -1067,7 +1078,7 @@ struct cpu
 				
 				explicit_write_back<Word>(effective_val, mem, effective_addr);
 
-				DEC_SET_FLAGS(effective_val);
+				DEC_INC_SET_FLAGS(effective_val);
 
 			}
 			break;
@@ -1089,11 +1100,130 @@ struct cpu
 				explicit_write_back<Word>(effective_val, mem, effective_addr);
 
 
-				DEC_SET_FLAGS(effective_val);
+				DEC_INC_SET_FLAGS(effective_val);
 
 			}
 			break;
-			
+
+			case DEX_IMPLIED:
+			{
+				fetch_byte(mem);
+				X--;
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case DEY_IMPLIED:
+			{
+				fetch_byte(mem);
+				Y--;
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+
+			//INC
+
+			case INC_ZP:
+			{
+				Byte zp_address = fetch_byte(mem);
+
+				Byte value_at_zp_addr = readValue_on_address<Byte>(mem, zp_address);
+
+				explicit_write_back<Byte>(value_at_zp_addr, mem, zp_address);
+				value_at_zp_addr += 1;
+
+				explicit_write_back<Byte>(value_at_zp_addr, mem, zp_address);
+
+				DEC_INC_SET_FLAGS(value_at_zp_addr);
+
+			}
+
+			break;
+
+			case INC_ZPX:
+			{
+				Byte zp_addr = fetch_byte(mem);
+
+				Byte zp_val = readValue_on_address<Byte>(mem, zp_addr);
+
+				Byte effective_addr = zp_addr + X;
+
+				Byte effective_val = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_val, mem, effective_addr);
+				effective_val += 1;
+
+				explicit_write_back<Byte>(effective_val, mem, effective_addr);
+
+
+				DEC_INC_SET_FLAGS(effective_val);
+
+
+			}
+			break;
+
+			case INC_AB:
+			{
+				Byte BAL = fetch_byte(mem);
+				Byte BAH = fetch_byte(mem);
+
+				Word effective_addr = BAH * 0x100 + BAL;
+
+				Byte effective_val = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+				effective_val += 1;
+
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+
+				DEC_INC_SET_FLAGS(effective_val);
+
+			}
+			break;
+
+			case INC_ABX:
+			{
+				Byte BAL = fetch_byte(mem);
+				Byte BAH = fetch_byte(mem);
+
+				Word effective_addr = BAH * 0x100 + BAL + X;
+
+				Byte effective_val = readValue_on_address<Word>(mem, effective_addr);
+
+				effective_val = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+				effective_val += 1;
+
+				explicit_write_back<Word>(effective_val, mem, effective_addr);
+
+
+				DEC_INC_SET_FLAGS(effective_val);
+
+			}
+			break;
+
+			case INX_IMPLIED:
+			{
+				fetch_byte(mem);
+				X++;
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case INY_IMPLIED:
+			{
+				fetch_byte(mem);
+				Y++;
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
