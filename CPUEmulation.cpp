@@ -103,6 +103,12 @@ struct cpu
 
 		JSR_AB = 0x20,
 
+		LSR_A = 0x4A,
+		LSR_ZP = 0x46,
+		LSR_ZPX = 0x56,
+		LSR_AB = 0x4E,
+		LSR_ABX = 0x5E,
+
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
 		LDA_ZPX = 0xB5,
@@ -132,7 +138,7 @@ struct cpu
 			ZF = 1;
 		}
 
-		NF = (A & 0b01000000) > 0;
+		NF = (A & 0b10000000) > 0;
 	}
 
 	void ADC_SET_FLAGS()
@@ -147,7 +153,7 @@ struct cpu
 			ZF = 1;
 		}
 
-		NF = (A & 0b01000000) > 0;
+		NF = (A & 0b10000000) > 0;
 	}
 
 	void CMP_SET_FLAGS(Byte A, Byte cmp_byte)
@@ -172,7 +178,7 @@ struct cpu
 			ZF = 1;
 		}
 
-		NF = (A & 0b01000000) > 0;
+		NF = (result & 0b01000000) > 0;
 	}
 
 	//fetch byte from memory
@@ -1240,6 +1246,94 @@ struct cpu
 			}
 			break;
 
+			//LSR
+
+			case LSR_A:
+			{
+				A = A >> 1;
+				
+				LSR_SET_FLAGS(A);
+			}
+			break;
+
+			case LSR_ZP:
+			{
+				Byte effective_addr = fetch_byte(mem);
+
+				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_value, mem, effective_addr);
+				effective_value = effective_value >> 1;
+
+				explicit_write_back(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+			}
+
+			case LSR_ZPX:
+			{
+				/*Byte addr = fetch_byte(mem);
+
+				readValue_on_address<Byte>(mem, addr);
+
+				Byte effective_addr = addr + X;
+
+				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_value, mem, effective_addr);
+				effective_value = effective_value >> 1;
+
+				explicit_write_back(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);*/
+
+			}
+			break;
+
+			case LSR_AB:
+			{
+				/*Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				effective_value = effective_value >> 1;
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);*/
+			}
+			break;
+
+			case LSR_ABX:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr_asterisk = low_byte + X;
+
+				readValue_on_address<Word>(mem, effective_addr_asterisk);
+
+
+				Word effective_addr = high_byte * 0x100 + effective_addr_asterisk;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+				effective_value = effective_value >> 1;
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+
+
+			}
+			break;
+
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
 				exit(0);
@@ -1253,6 +1347,18 @@ struct cpu
 	{
 		Word Bit16_addr = 0x100 + stack_pointer;
 		return Bit16_addr;
+	}
+
+	void LSR_SET_FLAGS(Byte value)
+	{
+		CF = (value & 0b00000001) > 0;
+
+		if (value == 0)
+		{
+			ZF = 0;
+		}
+
+		NF = (value & 0b1000000) > 0;
 	}
 
 };
