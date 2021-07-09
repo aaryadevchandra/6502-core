@@ -25,4 +25,4 @@ _________________________________________________
 
 - And at last, the absolute goldmine of a website is [this](https://nesdev.com/6502_cpu.txt), with detailed information on what each cycle in the 6502 does for _every instruction_ and _for every addressing mode of an instruction_. This site is hands-down the best resource for 6502 development.
 
-- Another resources would be the [official 6502 manual](https://archive.org/details/mos_microcomputers_programming_manual/mode/2up) from MOS Technologies. 
+- Another possible resource which would _have_ to be mentioned is the [official 6502 manual](https://archive.org/details/mos_microcomputers_programming_manual/mode/2up) from MOS Technologies. 
