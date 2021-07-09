@@ -123,6 +123,12 @@ struct cpu
 		ROL_AB = 0x2E,
 		ROL_ABX = 0x3E,
 
+		ROR_A = 0x6A,
+		ROR_ZP = 0x66,
+		ROR_ZPX = 0x76,
+		ROR_AB = 0x6E,
+		ROR_ABX = 0x7E,
+
 		NOP_IMPLIED = 0xEA,
 
 		ORA_IM = 0x09,
@@ -1665,6 +1671,20 @@ struct cpu
 
 			case ROL_A:
 			{
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
+
 				A = A << 1;
 
 				LSR_SET_FLAGS(A);
@@ -1678,6 +1698,21 @@ struct cpu
 				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
 
 				explicit_write_back(effective_value, mem, effective_addr);
+
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
+
 				effective_value = effective_value << 1;
 
 				explicit_write_back(effective_value, mem, effective_addr);
@@ -1696,6 +1731,19 @@ struct cpu
 				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
 
 				explicit_write_back(effective_value, mem, effective_addr);
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
 				effective_value = effective_value << 1;
 
 				explicit_write_back(effective_value, mem, effective_addr);
@@ -1715,6 +1763,19 @@ struct cpu
 				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
 
 				effective_value = effective_value << 1;
 
@@ -1739,6 +1800,19 @@ struct cpu
 				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
 				effective_value = effective_value << 1;
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
@@ -1747,13 +1821,167 @@ struct cpu
 			}
 			break;
 
+			case ROR_A:
+			{
+				Byte bitwise_temp = status_byte << 7;
 
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
+
+				A = A >> 1;
+
+				LSR_SET_FLAGS(A);
+			}
+			break;
+
+			case ROR_ZP:
+			{
+				Byte effective_addr = fetch_byte(mem);
+
+				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_value, mem, effective_addr);
+
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
+
+				effective_value = effective_value >> 1;
+
+				explicit_write_back(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+			}
+
+			case ROR_ZPX:
+			{
+				Byte addr = fetch_byte(mem);
+
+				readValue_on_address<Byte>(mem, addr);
+
+				Byte effective_addr = addr + X;
+
+				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_value, mem, effective_addr);
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
+				effective_value = effective_value >> 1;
+
+				explicit_write_back(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+
+			}
+			break;
+
+			case ROR_AB:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
+
+				effective_value = effective_value >> 1;
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+			}
+			break;
+
+			case ROR_ABX:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr_asterisk = low_byte + X;
+
+				readValue_on_address<Word>(mem, effective_addr_asterisk);
+
+
+				Word effective_addr = high_byte * 0x100 + effective_addr_asterisk;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+				Byte bitwise_temp = status_byte << 7;
+
+				if (bitwise_temp >> 7 == 1)
+				{
+					A |= bitwise_temp;
+				}
+				else if (bitwise_temp >> 7 == 0)
+				{
+					bitwise_temp |= A;
+
+					bitwise_temp <<= 1;
+					bitwise_temp >>= 1;
+				}
+				effective_value = effective_value >> 1;
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+			}
+			break;
+
+			//NOP
 				
 			case NOP_IMPLIED:
 			{
 				fetch_byte(mem);
 			}
 			break;
+
+			//ORA
 
 			//2 cycles
 			case ORA_IM:
@@ -1908,6 +2136,8 @@ struct cpu
 			}
 			break;
 
+
+			
 			
 
 
@@ -1981,7 +2211,6 @@ struct cpu
 	}
 
 };
-
 
 int main()
 {
