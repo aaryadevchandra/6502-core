@@ -5,8 +5,6 @@ Currently the project is in progress. The 6502 has 56 instructions out of which 
 
 For each addressing mode of every instruction, I'll be uploading some codes that you can use to test the instruction out. I will be trying to make it a bit modular so as to avoid adding all tests in the same file as well as make custom headers to make it look a bit cleaner. 
 
-I have used [this](http://www.obelisk.me.uk/6502/reference.html) site as reference for the emulator. See you soon, adios!
-
 
 # How To Use
 __________________________________
@@ -17,6 +15,14 @@ __________________________________
 - These are the "tests" I was talking about. To use the program, just call the `execute_instruction()` function which takes the number of clock cycles and then an instance of the memory structure as parameters. 
 
 - The clock cycles _have_ to be accurate according to the instruction and its specific addressing mode you wish to run or the program will fail.
-- Use this [reference manual](http://www.obelisk.me.uk/6502/reference.html) given above to find the number cycles for a particular instruction belonging to a specific addressing mode. 
 
-- Another resource to help with addresing modes in the 6502 would be [this](http://www.emulator101.com/6502-addressing-modes.html).
+
+# Resources
+_________________________________________________
+- The base instruction reference with information related to [opcodes and number of cycles](http://www.obelisk.me.uk/6502/reference.html)
+
+- Information related to [addressing modes in the 6502](http://www.emulator101.com/6502-addressing-modes.html) 
+
+- And at last, the absolute goldmine of a website is [this](https://nesdev.com/6502_cpu.txt), with detailed information on what each cycle in the 6502 does for _every instruction_ and _for every addressing mode of an instruction_. This site is hands-down the best resource for 6502 development.
+
+- Another resources would be the [official 6502 manual](https://archive.org/details/mos_microcomputers_programming_manual/mode/2up) from MOS Technologies. 
