@@ -1,9 +1,5 @@
-#include<iostream>
 #include "type_definitions.h"
 using namespace std;
-
-//program counter - will hold the memory address of the next instruction to be executed
-//instruction register - will hold the current instruction (opcode) to be executed 
 
 struct Memory
 {
