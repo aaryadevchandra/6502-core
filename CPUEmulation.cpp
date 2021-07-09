@@ -28,14 +28,8 @@ struct cpu
 	Byte X;
 	Byte Y;
 
-	//Flags
-	Byte CF;
-	Byte ZF;
-	Byte IDF;
-	Byte DMF;
-	Byte BCF;
-	Byte OF;
-	Byte NF;
+	//Status register
+	Byte status_byte = 0b00100000;
 
 
 	//initializing register and flag values
@@ -43,14 +37,6 @@ struct cpu
 	{
 		stack_pointer = 0xFF;
 		program_counter = 0xFFFC;
-
-		CF = 0;
-		ZF = 0;
-		IDF = 0;
-		DMF = 0;
-		BCF = 0;
-		OF = 0;
-		NF = 0;
 	}
 
 	//mapping opcode to instructions
@@ -111,11 +97,42 @@ struct cpu
 		CPY_ZP = 0xC4,
 		CPY_AB = 0xCC,
 
+		EOR_IM = 0x49,
+		EOR_ZP = 0x45,
+		EOR_ZPX = 0x55,
+		EOR_AB = 0x4D,
+		EOR_ABX = 0x5D,
+		EOR_ABY = 0x59,
+		EOR_INX = 0x41,
+		EOR_INY = 0x51,
+
+		PHA_IMPLIED = 0x48,
+		PHP_IMPLIED = 0x08,
+		PLA_IMPLIED = 0x68,
+		PLP_IMPLIED = 0x28,
+
 		LSR_A = 0x4A,
 		LSR_ZP = 0x46,
 		LSR_ZPX = 0x56,
 		LSR_AB = 0x4E,
 		LSR_ABX = 0x5E,
+
+		ROL_A = 0x2A,
+		ROL_ZP = 0x26,
+		ROL_ZPX = 0x36,
+		ROL_AB = 0x2E,
+		ROL_ABX = 0x3E,
+
+		NOP_IMPLIED = 0xEA,
+
+		ORA_IM = 0x09,
+		ORA_ZP = 0x05,
+		ORA_ZPX = 0x15,
+		ORA_AB = 0x0D,
+		ORA_ABX = 0x1D,
+		ORA_ABY = 0x19,
+		ORA_INX = 0x01,
+		ORA_INY = 0x11,
 
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
@@ -143,62 +160,76 @@ struct cpu
 	{
 		if (A == 0)
 		{
-			ZF = 1;
+			set_zero_flag();
 		}
 
-		NF = (A & 0b10000000) > 0;
+		if (A >> 7 == 1)
+		{
+			status_byte |= 0b10000000;
+		}
 	}
 
 	void ADC_SET_FLAGS()
 	{
 		if (A > 0xffff)
 		{
-			CF = 1;
+			set_carry_flag();
 		}
 
 		if (A == 0)
 		{
-			ZF = 1;
+			set_zero_flag();
 		}
 
-		NF = (A & 0b10000000) > 0;
+		if (A >> 7 == 1)
+		{
+			status_byte |= 0b10000000;
+		}
 	}
 
 	void CMP_SET_FLAGS(Byte A, Byte cmp_byte)
 	{
 		if (A >= cmp_byte)
 		{
-			CF = 1;
+			set_carry_flag();
 		}
 
 		if (A == cmp_byte)
 		{
-			ZF = 1;
+			set_zero_flag();
 		}
 
-		NF = (A & 0b10000000) > 0;
+		Byte result = A - cmp_byte;
+
+		if (result >> 7 == 1)
+		{
+			status_byte |= 0b10000000;
+		}
 	}
 
 	void DEC_INC_SET_FLAGS(Byte result)
 	{
 		if (result == 0)
 		{
-			ZF = 1;
+			set_zero_flag();
 		}
 
-		NF = (result & 0b10000000) > 0;
+		if (result >> 7 == 1)
+		{
+			status_byte |= 0b10000000;
+		}
 	}
 
 	void CPI(Byte register_val, Byte cmp_val)
 	{
 		if (register_val >= cmp_val)
 		{
-			CF = 1;
+			set_carry_flag();
 		}
 
 		if (register_val == cmp_val)
 		{
-			ZF = 1;
+			set_zero_flag();
 
 		}
 	}
@@ -1270,7 +1301,15 @@ struct cpu
 
 			case LSR_A:
 			{
+				//shifting bit 0 to carry flag
+				Byte bitwise_temp = A << 7;
+				bitwise_temp >>= 7;
+				status_byte |= bitwise_temp;
+
+				//one right shift
 				A = A >> 1;
+
+				A = A & 0b01111111;
 				
 				LSR_SET_FLAGS(A);
 			}
@@ -1283,7 +1322,14 @@ struct cpu
 				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
 
 				explicit_write_back(effective_value, mem, effective_addr);
+
+				Byte bitwise_temp = effective_value << 7;
+				bitwise_temp >>= 7;
+				status_byte |= bitwise_temp;
+
 				effective_value = effective_value >> 1;
+
+				effective_value = effective_value & 0b01111111;
 
 				explicit_write_back(effective_value, mem, effective_addr);
 
@@ -1301,7 +1347,14 @@ struct cpu
 				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
 
 				explicit_write_back(effective_value, mem, effective_addr);
+
+				Byte bitwise_temp = effective_value << 7;
+				bitwise_temp >>= 7;
+				status_byte |= bitwise_temp;
+
 				effective_value = effective_value >> 1;
+
+				effective_value = effective_value & 0b01111111;
 
 				explicit_write_back(effective_value, mem, effective_addr);
 
@@ -1321,7 +1374,13 @@ struct cpu
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
 
+				Byte bitwise_temp = effective_value << 7;
+				bitwise_temp >>= 7;
+				status_byte |= bitwise_temp;
+
 				effective_value = effective_value >> 1;
+
+				effective_value = effective_value & 0b01111111;
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
 
@@ -1344,7 +1403,14 @@ struct cpu
 				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
+				
+				Byte bitwise_temp = effective_value << 7;
+				bitwise_temp >>= 7;
+				status_byte |= bitwise_temp;
+
 				effective_value = effective_value >> 1;
+
+				effective_value = effective_value & 0b01111111;
 
 				explicit_write_back<Word>(effective_value, mem, effective_addr);
 
@@ -1419,7 +1485,431 @@ struct cpu
 				CPI(X, effective_value);
 			}
 			break;
+
+			//EOR
+
+			//2 cycles
+			case EOR_IM:
+			{
+				//fetching the immediate value to be stored and assigning it to A register
+				A ^= fetch_byte(mem);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//3 cycles
+			case EOR_ZP:
+			{
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
+
+				//fetching the byte from the zero page address we just fetched from memory
+				A ^= readValue_on_address<Byte>(mem, effective_addr);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//4 cycles
+			case EOR_ZPX:
+			{
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
+
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
+
+				A ^= readValue_on_address<Word>(mem, effective_addr);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//4 cycles
+			case EOR_AB:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+
+				//reading value stored at the previously formed 16-bit address
+				A ^= readValue_on_address<Word>(mem, absolute_address);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case EOR_ABX:
+			{
+
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + X > 0xffff)
+				{
+					cycles--;
+				}
+
+				A ^= readValue_on_address<DWord>(mem, absolute_address + X);
+
+				LDA_SET_FLAGS();
+
+			}
+			break;
+
+			case EOR_ABY:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + Y > 0xffff)
+				{
+					cycles--;
+				}
+
+				A ^= readValue_on_address<DWord>(mem, absolute_address + Y);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//6 cycles
+			case EOR_INX:
+			{
+				Byte BAL = fetch_byte(mem);
+
+				Word effective_addr = BAL + X;
+				cycles--;
+
+				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
+				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
+
+				Word fetch_addr;
+				if (effective_addr_L > 0xff)
+				{
+					fetch_addr = effective_addr_H * 0x100 + effective_addr_L;
+				}
+
+				else
+				{
+					fetch_addr = effective_addr_L;
+				}
+
+				A ^= readValue_on_address<Word>(mem, fetch_addr);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//6 cycles
+			case EOR_INY:
+			{
+
+				Byte IAL = fetch_byte(mem);
+
+				Byte BAL = readValue_on_address<Byte>(mem, IAL);
+				Byte BAH = readValue_on_address<Byte>(mem, IAL + 1);
+
+				DWord fetch_addr = BAH * 0x100 + BAL + Y;
+
+				if (fetch_addr > 0xffff)
+				{
+					cycles--;
+				}
+
+				A ^= readValue_on_address<DWord>(mem, fetch_addr);
+
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case PHA_IMPLIED:
+			{
+				explicit_write_back<Word>(A, mem, stack_pointer);
+				stack_pointer--;
+			}
+			break;
 			
+			case PHP_IMPLIED:
+			{
+				explicit_write_back<Word>(status_byte, mem, stack_pointer);
+				stack_pointer--;
+			}
+			break;
+
+			case PLA_IMPLIED:
+			{
+				A = readValue_on_address<Byte>(mem, stack_pointer);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case ROL_A:
+			{
+				A = A << 1;
+
+				LSR_SET_FLAGS(A);
+			}
+			break;
+
+			case ROL_ZP:
+			{
+				Byte effective_addr = fetch_byte(mem);
+
+				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_value, mem, effective_addr);
+				effective_value = effective_value << 1;
+
+				explicit_write_back(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+			}
+
+			case ROL_ZPX:
+			{
+				Byte addr = fetch_byte(mem);
+
+				readValue_on_address<Byte>(mem, addr);
+
+				Byte effective_addr = addr + X;
+
+				Byte effective_value = readValue_on_address<Byte>(mem, effective_addr);
+
+				explicit_write_back(effective_value, mem, effective_addr);
+				effective_value = effective_value << 1;
+
+				explicit_write_back(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+
+			}
+			break;
+
+			case ROL_AB:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				effective_value = effective_value << 1;
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+			}
+			break;
+
+			case ROL_ABX:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr_asterisk = low_byte + X;
+
+				readValue_on_address<Word>(mem, effective_addr_asterisk);
+
+
+				Word effective_addr = high_byte * 0x100 + effective_addr_asterisk;
+
+				Byte effective_value = readValue_on_address<Word>(mem, effective_addr);
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+				effective_value = effective_value << 1;
+
+				explicit_write_back<Word>(effective_value, mem, effective_addr);
+
+				LSR_SET_FLAGS(effective_value);
+			}
+			break;
+
+
+				
+			case NOP_IMPLIED:
+			{
+				fetch_byte(mem);
+			}
+			break;
+
+			//2 cycles
+			case ORA_IM:
+			{
+				//fetching the immediate value to be stored and assigning it to A register
+				A |= fetch_byte(mem);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//3 cycles
+			case ORA_ZP:
+			{
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
+
+				//fetching the byte from the zero page address we just fetched from memory
+				A |= readValue_on_address<Byte>(mem, effective_addr);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//4 cycles
+			case ORA_ZPX:
+			{
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
+
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
+
+				A |= readValue_on_address<Word>(mem, effective_addr);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//4 cycles
+			case ORA_AB:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+
+				//reading value stored at the previously formed 16-bit address
+				A |= readValue_on_address<Word>(mem, absolute_address);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case ORA_ABX:
+			{
+
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + X > 0xffff)
+				{
+					cycles--;
+				}
+
+				A |= readValue_on_address<DWord>(mem, absolute_address + X);
+
+				LDA_SET_FLAGS();
+
+			}
+			break;
+
+			case ORA_ABY:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + Y > 0xffff)
+				{
+					cycles--;
+				}
+
+				A |= readValue_on_address<DWord>(mem, absolute_address + Y);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//6 cycles
+			case ORA_INX:
+			{
+				Byte BAL = fetch_byte(mem);
+
+				Word effective_addr = BAL + X;
+				cycles--;
+
+				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
+				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
+
+				Word fetch_addr;
+				if (effective_addr_L > 0xff)
+				{
+					fetch_addr = effective_addr_H * 0x100 + effective_addr_L;
+				}
+
+				else
+				{
+					fetch_addr = effective_addr_L;
+				}
+
+				A |= readValue_on_address<Word>(mem, fetch_addr);
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//6 cycles
+			case ORA_INY:
+			{
+
+				Byte IAL = fetch_byte(mem);
+
+				Byte BAL = readValue_on_address<Byte>(mem, IAL);
+				Byte BAH = readValue_on_address<Byte>(mem, IAL + 1);
+
+				DWord fetch_addr = BAH * 0x100 + BAL + Y;
+
+				if (fetch_addr > 0xffff)
+				{
+					cycles--;
+				}
+
+				A |= readValue_on_address<DWord>(mem, fetch_addr);
+
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			
+
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
@@ -1438,17 +1928,60 @@ struct cpu
 
 	void LSR_SET_FLAGS(Byte value)
 	{
-		CF = (value & 0b00000001) > 0;
+		status_byte |= (((value << 7) ^ 0b00000000) >> 7);
 
 		if (value == 0)
 		{
-			ZF = 0;
+			set_zero_flag();
 		}
 
-		NF = (value & 0b1000000) > 0;
+		if (value >> 7 == 1)
+		{
+			status_byte |= 0b10000000;
+		}
+	}
+
+
+	//00100000
+
+	//set flag functions
+	void set_carry_flag()
+	{	
+		status_byte |= 0b00000001;
+	}
+	
+	void set_zero_flag()
+	{
+		status_byte |= 0b00000010;
+	}
+
+	void set_interruptdisable_flag()
+	{
+		status_byte |= 0b00000100;
+	}
+	
+	void set_decimal_flag()
+	{
+		status_byte |= 0b00001000;
+	}
+
+	void set_B_flag()
+	{
+		status_byte |= 0b00010000;
+	}
+
+	void set_overflow_flag()
+	{
+		status_byte |= 0b01000000;
+	}
+
+	void set_negative_flag()
+	{
+		status_byte |= 0b10000000;
 	}
 
 };
+
 
 int main()
 {
@@ -1463,4 +1996,5 @@ int main()
 	mem.memory_block[0xfffd] = 0x10;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
+
 }
