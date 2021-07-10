@@ -2,6 +2,15 @@
 #include "type_definitions.h"
 using namespace std;
 
+Byte twoscomplement(Byte var)
+{
+	var = ~var;
+
+	var++;
+
+	return var;
+}
+
 struct Memory
 {
 	static constexpr DWord MAX_MEM = 65 * 1024; //65Kb of memory
@@ -135,6 +144,19 @@ struct cpu
 		ORA_ABY = 0x19,
 		ORA_INX = 0x01,
 		ORA_INY = 0x11,
+
+		SBC_IM = 0xE9,
+		SBC_ZP = 0xE5,
+		SBC_ZPX = 0xF5,
+		SBC_AB = 0xED,
+		SBC_ABX = 0xFD,
+		SBC_ABY = 0xF9,
+		SBC_INX = 0xE1,
+		SBC_INY = 0xF1,
+
+		SEC_IMPLIED = 0x38,
+		SED_IMPLIED = 0xF8,
+		SEI_IMPLIED = 0x78,
 
 		LDA_IM = 0xA9,
 		LDA_ZP = 0xA5,
@@ -2257,10 +2279,393 @@ struct cpu
 			}
 			break;
 
+			//SBC
+
+			//2 cycles
+			case SBC_IM:
+			{
+				//fetching the immediate value to be stored and assigning it to A register
+				
+				Byte M = fetch_byte(mem);
+
+				M = twoscomplement(M);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//3 cycles
+			case SBC_ZP:
+			{
+				//fetch_byte() fetches the zero page address
+				Word effective_addr = fetch_byte(mem);
+
+				//fetching the byte from the zero page address we just fetched from memory
+				Byte M= readValue_on_address<Byte>(mem, effective_addr);
+				
+				M = twoscomplement(M);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}
+				
+				
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//4 cycles
+			case SBC_ZPX:
+			{
+				//fetching zero page base address 
+				Byte BAL = fetch_byte(mem);
+
+				Byte effective_addr = BAL + X;
+				cycles--; //fetching from X register
+
+				Byte M = readValue_on_address<Word>(mem, effective_addr);
+
+				M = twoscomplement(M);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//4 cycles
+			case SBC_AB:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
 
 
+				//reading value stored at the previously formed 16-bit address
+				Byte M = readValue_on_address<Word>(mem, absolute_address);
+				M = twoscomplement(M);
 
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
 
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case SBC_ABX:
+			{
+
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + X > 0xffff)
+				{
+					cycles--;
+				}
+
+				Byte M = readValue_on_address<DWord>(mem, absolute_address + X);
+
+				M = twoscomplement(M);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}
+
+				LDA_SET_FLAGS();
+
+			}
+			break;
+
+			case SBC_ABY:
+			{
+				//getting first 8 bits (1 byte) of 16 bits address
+				Byte address_byte1 = fetch_byte(mem);
+
+				//getting second 8 bits of 16 bits address
+				Byte address_byte2 = fetch_byte(mem);
+
+				//forming a 16-bit address by adding the 2 individual 8-bit addresses
+				Word absolute_address = address_byte2 * 0x100 + address_byte1;
+
+				if (absolute_address + Y > 0xffff)
+				{
+					cycles--;
+				}
+
+				Byte M = readValue_on_address<DWord>(mem, absolute_address + Y);
+				M = twoscomplement(M);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//6 cycles
+			case SBC_INX:
+			{
+				Byte BAL = fetch_byte(mem);
+
+				Word effective_addr = BAL + X;
+				cycles--;
+
+				Byte effective_addr_L = readValue_on_address<Byte>(mem, effective_addr);
+				Byte effective_addr_H = readValue_on_address<Byte>(mem, effective_addr + 1);
+
+				Word fetch_addr;
+				if (effective_addr_L > 0xff)
+				{
+					fetch_addr = effective_addr_H * 0x100 + effective_addr_L;
+				}
+
+				else
+				{
+					fetch_addr = effective_addr_L;
+				}
+
+				Byte M = readValue_on_address<Word>(mem, fetch_addr);
+				M = twoscomplement(M);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			//6 cycles
+			case SBC_INY:
+			{
+
+				Byte IAL = fetch_byte(mem);
+
+				Byte BAL = readValue_on_address<Byte>(mem, IAL);
+				Byte BAH = readValue_on_address<Byte>(mem, IAL + 1);
+
+				DWord fetch_addr = BAH * 0x100 + BAL + Y;
+
+				if (fetch_addr > 0xffff)
+				{
+					cycles--;
+				}
+
+				Byte M = readValue_on_address<DWord>(mem, fetch_addr);
+				M = twoscomplement(M);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				Byte temp = A + M;
+
+				A = A + M - ~bitwise_temp;
+				
+				if (temp > 0xff)
+				{
+					if (bitwise_temp == 1)
+					{
+						bitwise_temp = bitwise_temp | status_byte;
+
+						bitwise_temp = bitwise_temp >> 1;
+						bitwise_temp = bitwise_temp << 1;
+
+						status_byte &= bitwise_temp;
+					}
+				}				
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case SEC_IMPLIED:
+			{
+				fetch_byte(mem);
+
+				Byte bitwise_temp = status_byte << 7;
+				bitwise_temp = bitwise_temp >> 7;
+
+				if (bitwise_temp == 1)
+				{
+					//do nothing
+				}
+				else if (bitwise_temp == 0)
+				{
+					status_byte |= 0b00000001;
+				}
+				
+			}
+			break;
+
+			//0010 0000
+
+			case SED_IMPLIED:
+			{
+				fetch_byte(mem);
+
+				Byte bitwise_temp = status_byte << 4;
+				bitwise_temp = bitwise_temp >> 7;
+
+				if (bitwise_temp == 1)
+				{
+					//do nothing, flag already 1
+				}
+				else if (bitwise_temp == 0)
+				{
+					status_byte |= 0b00101000;
+				}
+			}
+			break;
+
+			case SEI_IMPLIED:
+			{
+				fetch_byte(mem);
+
+				Byte bitwise_temp = status_byte << 3;
+				bitwise_temp = bitwise_temp >> 7;
+				
+
+				if (bitwise_temp == 1)
+				{
+					//do nothing 
+				}
+				else if (bitwise_temp == 0)
+				{
+					status_byte |= 0b00100100;
+				}
+			}
+			break;
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
@@ -2291,9 +2696,6 @@ struct cpu
 			status_byte |= 0b10000000;
 		}
 	}
-
-
-	//00100000
 
 	//set flag functions
 	void set_carry_flag()
@@ -2333,6 +2735,8 @@ struct cpu
 
 };
 
+
+
 int main()
 {
 	cpu obj;
@@ -2346,5 +2750,4 @@ int main()
 	mem.memory_block[0xfffd] = 0x10;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
-
 }
