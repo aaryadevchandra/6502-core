@@ -5,9 +5,7 @@ using namespace std;
 Byte twoscomplement(Byte var)
 {
 	var = ~var;
-
 	var++;
-
 	return var;
 }
 
@@ -96,88 +94,109 @@ struct cpu
 		JSR_AB = 0x20,
 
 		CPX_IM = 0xE0,
-		CPX_ZP = 0xE4,
-		CPX_AB = 0xEC,
+CPX_ZP = 0xE4,
+CPX_AB = 0xEC,
 
-		CPY_IM = 0xC0,
-		CPY_ZP = 0xC4,
-		CPY_AB = 0xCC,
+CPY_IM = 0xC0,
+CPY_ZP = 0xC4,
+CPY_AB = 0xCC,
 
-		EOR_IM = 0x49,
-		EOR_ZP = 0x45,
-		EOR_ZPX = 0x55,
-		EOR_AB = 0x4D,
-		EOR_ABX = 0x5D,
-		EOR_ABY = 0x59,
-		EOR_INX = 0x41,
-		EOR_INY = 0x51,
+EOR_IM = 0x49,
+EOR_ZP = 0x45,
+EOR_ZPX = 0x55,
+EOR_AB = 0x4D,
+EOR_ABX = 0x5D,
+EOR_ABY = 0x59,
+EOR_INX = 0x41,
+EOR_INY = 0x51,
 
-		PHA_IMPLIED = 0x48,
-		PHP_IMPLIED = 0x08,
-		PLA_IMPLIED = 0x68,
+PHA_IMPLIED = 0x48,
+PHP_IMPLIED = 0x08,
+PLA_IMPLIED = 0x68,
 
-		LSR_A = 0x4A,
-		LSR_ZP = 0x46,
-		LSR_ZPX = 0x56,
-		LSR_AB = 0x4E,
-		LSR_ABX = 0x5E,
+LDA_IM = 0xA9,
+LDA_ZP = 0xA5,
+LDA_ZPX = 0xB5,
+LDA_AB = 0xAD,
+LDA_ABX = 0xBD,
+LDA_ABY = 0xB9,
+LDA_INX = 0xA1,
+LDA_INY = 0xB1,
 
-		ROL_A = 0x2A,
-		ROL_ZP = 0x26,
-		ROL_ZPX = 0x36,
-		ROL_AB = 0x2E,
-		ROL_ABX = 0x3E,
+LDX_IM = 0xA2,
+LDX_ZP = 0xA6,
+LDX_ZPY = 0xB6,
+LDX_AB = 0xAE,
+LDX_ABY = 0xBE,
 
-		ROR_A = 0x6A,
-		ROR_ZP = 0x66,
-		ROR_ZPX = 0x76,
-		ROR_AB = 0x6E,
-		ROR_ABX = 0x7E,
+LDY_IM = 0xA0,
+LDY_ZP = 0xA4,
+LDY_ZPX = 0xB4,
+LDY_AB = 0xAC,
+LDY_ABX = 0xBC,
 
-		NOP_IMPLIED = 0xEA,
+LSR_A = 0x4A,
+LSR_ZP = 0x46,
+LSR_ZPX = 0x56,
+LSR_AB = 0x4E,
+LSR_ABX = 0x5E,
 
-		ORA_IM = 0x09,
-		ORA_ZP = 0x05,
-		ORA_ZPX = 0x15,
-		ORA_AB = 0x0D,
-		ORA_ABX = 0x1D,
-		ORA_ABY = 0x19,
-		ORA_INX = 0x01,
-		ORA_INY = 0x11,
+ROL_A = 0x2A,
+ROL_ZP = 0x26,
+ROL_ZPX = 0x36,
+ROL_AB = 0x2E,
+ROL_ABX = 0x3E,
 
-		SBC_IM = 0xE9,
-		SBC_ZP = 0xE5,
-		SBC_ZPX = 0xF5,
-		SBC_AB = 0xED,
-		SBC_ABX = 0xFD,
-		SBC_ABY = 0xF9,
-		SBC_INX = 0xE1,
-		SBC_INY = 0xF1,
+ROR_A = 0x6A,
+ROR_ZP = 0x66,
+ROR_ZPX = 0x76,
+ROR_AB = 0x6E,
+ROR_ABX = 0x7E,
 
-		SEC_IMPLIED = 0x38,
-		SED_IMPLIED = 0xF8,
-		SEI_IMPLIED = 0x78,
+NOP_IMPLIED = 0xEA,
 
-		LDA_IM = 0xA9,
-		LDA_ZP = 0xA5,
-		LDA_ZPX = 0xB5,
-		LDA_AB = 0xAD,
-		LDA_ABX = 0xBD,
-		LDA_ABY = 0xB9,
-		LDA_INX = 0xA1,
-		LDA_INY = 0xB1,
+ORA_IM = 0x09,
+ORA_ZP = 0x05,
+ORA_ZPX = 0x15,
+ORA_AB = 0x0D,
+ORA_ABX = 0x1D,
+ORA_ABY = 0x19,
+ORA_INX = 0x01,
+ORA_INY = 0x11,
 
-		LDX_IM = 0xA2,
-		LDX_ZP = 0xA6,
-		LDX_ZPY = 0xB6,
-		LDX_AB = 0xAE,
-		LDX_ABY = 0xBE,
+SBC_IM = 0xE9,
+SBC_ZP = 0xE5,
+SBC_ZPX = 0xF5,
+SBC_AB = 0xED,
+SBC_ABX = 0xFD,
+SBC_ABY = 0xF9,
+SBC_INX = 0xE1,
+SBC_INY = 0xF1,
 
-		LDY_IM = 0xA0,
-		LDY_ZP = 0xA4,
-		LDY_ZPX = 0xB4,
-		LDY_AB = 0xAC,
-		LDY_ABX = 0xBC;
+SEC_IMPLIED = 0x38,
+SED_IMPLIED = 0xF8,
+SEI_IMPLIED = 0x78,
+
+STA_ZP = 0x85,
+STA_ZPX = 0x95,
+STA_AB = 0x8D,
+STA_ABX = 0x9D,
+STA_ABY = 0x99,
+STA_INX = 0x81,
+STA_INY = 0x91,
+
+STX_ZP = 0x86,
+STX_ZPY = 0x96,
+STX_AB = 0x8E,
+
+STY_ZP = 0x84,
+STY_ZPX = 0x94,
+STY_AB = 0x8C,
+
+TAX_IMPLIED = 0xAA,
+TAY_IMPLIED = 0xA8;
+		
+		
 
 
 	void LDA_SET_FLAGS()
@@ -2667,6 +2686,217 @@ struct cpu
 			}
 			break;
 
+			case STA_ZP:
+			{
+				Byte zp_addr = fetch_byte(mem);
+
+				explicit_write_back<Byte>(A, mem, zp_addr);
+
+			}
+			break;
+
+			case STA_ZPX:
+			{
+				Byte zp_addr = fetch_byte(mem);
+
+				Byte fetch_addr = readValue_on_address<Byte>(mem, zp_addr);
+
+				fetch_addr += X;
+
+				explicit_write_back<Byte>(A, mem, fetch_addr);
+			}
+			break;
+
+			case STA_AB:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+				explicit_write_back<Word>(A, mem, effective_addr);
+			}
+			break;
+
+			case STA_ABX:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word lowX_sum = low_byte + X;
+
+				low_byte += X;
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+
+				readValue_on_address<Word>(mem, effective_addr);
+
+				effective_addr = high_byte * 0x100 + lowX_sum;
+
+				explicit_write_back<Word>(A, mem, effective_addr);
+
+			}
+			break;
+
+			case STA_ABY:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+
+				Word lowX_sum = low_byte + Y;
+
+				low_byte += Y;
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+
+				readValue_on_address<Word>(mem, effective_addr);
+
+				effective_addr = high_byte * 0x100 + lowX_sum;
+
+				explicit_write_back<Word>(A, mem, effective_addr);
+			}
+			break;
+
+			case STA_INX:
+			{
+				Byte pointer = fetch_byte(mem);
+
+				readValue_on_address<Byte>(mem, pointer);
+
+				pointer += X;
+
+				Byte low_byte = readValue_on_address<Byte>(mem, pointer);
+
+				pointer += 1;
+
+				Byte high_byte = readValue_on_address<Byte>(mem, pointer);
+
+				Word effective_addr = high_byte * 0x100 + low_byte;
+
+				explicit_write_back<Word>(A, mem, effective_addr);
+			}
+			break;
+			
+			case STA_INY:
+			{
+				Byte pointer = fetch_byte(mem);
+
+				Byte low_byte = readValue_on_address<Byte>(mem, pointer);
+
+				pointer++;
+
+				Byte high_byte = readValue_on_address<Byte>(mem, pointer);
+
+				Word low_byte_no_loss = low_byte + Y;
+
+				low_byte += Y;
+
+				readValue_on_address<Byte>(mem, low_byte);
+
+				Word effective_addr = high_byte * 0x100 + low_byte_no_loss;
+
+				explicit_write_back<Word>(A, mem, effective_addr);
+			}
+			break;
+
+			//STX
+
+			case STX_ZP:
+			{
+				Byte addr = fetch_byte(mem);
+				explicit_write_back<Byte>(X, mem, addr);
+			}
+			break;
+
+			case STX_ZPY:
+			{
+				Byte addr = fetch_byte(mem);
+				readValue_on_address<Byte>(mem, addr);
+				addr += Y;
+				explicit_write_back<Word>(X, mem, addr);
+			}
+			break;
+
+			case STX_AB:
+			{
+				Byte BAL = fetch_byte(mem);
+				Byte BAH = fetch_byte(mem);
+
+				Word effective_addr = BAH * 0x100 + BAL;
+				explicit_write_back<Word>(X, mem, effective_addr);
+			}
+			break;
+
+			//STY
+
+			case STY_ZP:
+			{
+				Byte addr = fetch_byte(mem);
+				explicit_write_back<Byte>(Y, mem, addr);
+			}
+			break;
+
+			case STY_ZPX:
+			{
+				Byte addr = fetch_byte(mem);
+				readValue_on_address<Byte>(mem, addr);
+				addr += X;
+				explicit_write_back<Word>(Y, mem, addr);
+			}
+			break;
+
+			case STY_AB:
+			{
+				Byte BAL = fetch_byte(mem);
+				Byte BAH = fetch_byte(mem);
+
+				Word effective_addr = BAH * 0x100 + BAL;
+				explicit_write_back<Word>(Y, mem, effective_addr);
+			}
+			break;
+
+
+			case TAX_IMPLIED:
+			{
+				fetch_byte(mem);
+				X = A;
+
+				if (X == 0)
+				{
+					status_byte |= 0b00100010;
+				}
+
+				Byte bitwise_temp = X >> 7;
+				if (bitwise_temp == 1)
+				{
+					status_byte |= 0b10100000;
+				}
+			}
+			break;
+
+			case TAY_IMPLIED:
+			{
+				fetch_byte(mem);
+				Y = A;
+
+				if (Y == 0)
+				{
+					status_byte |= 0b00100010;
+				}
+
+				Byte bitwise_temp = X >> 7;
+				if (bitwise_temp == 1)
+				{
+					status_byte |= 0b10100000;
+				}
+				
+			}
+			break;
+
+			
+
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
 				exit(0);
@@ -2747,7 +2977,7 @@ int main()
 
 	//initializing program counter to read 2 bytes, join them and form one address to fetch the initial value 
 	mem.memory_block[0xfffc] = 0x00;
-	mem.memory_block[0xfffd] = 0x10;
+	mem.memory_block[0xfffd] = 0x00;
 	obj.program_counter = mem.memory_block[0xfffd] * 0x100 + mem.memory_block[0xfffc];
 	//program counter initialization complete
 }
