@@ -63,6 +63,12 @@ struct cpu
 		AND_INX = 0x21,
 		AND_INY = 0x31,
 
+		ASL_IMPLIED = 0x0A,
+		ASL_ZP = 0x06,
+		ASL_ZPX = 0x16,
+		ASL_AB = 0x0E,
+		ASL_ABX = 0x1E,
+
 		CMP_IM = 0xC9,
 		CMP_ZP = 0xC5,
 		CMP_ZPX = 0xD5,
@@ -2940,9 +2946,94 @@ TYA_IMPLIED = 0X98;
 			}
 			break;
 
-			
+			//ASL
 
-			
+			case ASL_IMPLIED:
+			{
+				fetch_byte(mem);
+
+				Byte bitwise_temp = A;
+
+				if (A << 1 > 0xff)
+				{
+					status_byte |= 0b00000001;
+				}
+
+				A = A << 1;
+
+				bitwise_temp = bitwise_temp >> 7;
+
+				if (bitwise_temp == 1)
+				{
+					status_byte |= 0b10000000;
+				}
+
+				else if (bitwise_temp == 0)
+				{
+					status_byte <<= 1;
+					status_byte >>= 1;
+				}
+				LDA_SET_FLAGS();
+
+			}
+			break;
+
+			case ASL_ZP:
+			{
+				Byte addr = fetch_byte(mem);
+
+				Byte addr_val = readValue_on_address<Byte>(mem, addr);
+
+				explicit_write_back<Byte>(addr_val, mem, addr);
+
+				addr_val <<= 1;
+
+				explicit_write_back<Byte>(addr_val, mem, addr);
+				LDA_SET_FLAGS();
+
+			}
+			break;
+
+			case ASL_ZPX:
+			{
+				Byte addr = fetch_byte(mem);
+				Byte addr_val = readValue_on_address<Byte>(mem, addr);
+				addr += X;
+				readValue_on_address<Byte>(mem, addr);
+				explicit_write_back<Byte>(addr_val, mem, addr);
+				addr_val <<= 1;
+				explicit_write_back<Byte>(addr_val, mem, addr);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case ASL_AB:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+				Byte effective_addr = high_byte * 0x100 + low_byte;
+				Byte effective_val = readValue_on_address<Byte>(mem, effective_addr);
+				explicit_write_back<Byte>(effective_val, mem, effective_addr);
+				effective_val <<= 1;
+				explicit_write_back<Byte>(effective_val, mem, effective_addr);
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			case ASL_ABX:
+			{
+				Byte low_byte = fetch_byte(mem);
+				Byte high_byte = fetch_byte(mem);
+				low_byte += X;
+				readValue_on_address<Word>(mem, low_byte);
+				Word effective_addr = high_byte * 0x100 + low_byte;
+				Byte effective_addr_val = readValue_on_address<Word>(mem, effective_addr);
+				explicit_write_back<Word>(effective_addr_val, mem, effective_addr);
+				effective_addr_val <<= 1;
+				explicit_write_back<Word>(effective_addr_val, mem, effective_addr);
+				LDA_SET_FLAGS();
+			}
+			break;
 
 			default:
 				cout << "\n\nIllegal opcode received! exiting..." << endl;
