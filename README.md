@@ -1,7 +1,7 @@
 # 6502-emulator
 _____________________________________
 
-Currently the project is in progress. The 6502 has 56 instructions out of which I have implemented 35 (LDA, LDX, LDY, ADC, AND, CMP, DEC, DEX, DEY, INC, INX, INY, JMP, JSR, LSR, CPY, CPX, EOR, PHA, PLA, PHP, NOP, ROL, ROR, ORA, SBC, SEC, SED, SEI, STA, STX, STY, TAX, TAY, TSX, with all addressing modes). The project is clock cycle accurate and ... well yeah that's all for now. 
+Currently the project is in progress. The 6502 has 56 instructions out of which I have implemented 35 (LDA, LDX, LDY, ADC, AND, CMP, DEC, DEX, DEY, INC, INX, INY, JMP, JSR, LSR, CPY, CPX, EOR, PHA, PLA, PHP, NOP, ROL, ROR, ORA, SBC, SEC, SED, SEI, STA, STX, STY, TAX, TAY, TSX, TXA, with all addressing modes). The project is clock cycle accurate and ... well yeah that's all for now. 
 
 For each addressing mode of every instruction, I'll be uploading some codes that you can use to test the instruction out. I will be trying to make it a bit modular so as to avoid adding all tests in the same file as well as make custom headers to make it look a bit cleaner. 
 
