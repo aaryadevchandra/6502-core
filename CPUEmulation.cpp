@@ -2930,6 +2930,16 @@ TYA_IMPLIED = 0X98;
 			}
 			break;
 
+			case TYA_IMPLIED:
+			{
+				fetch_byte(mem);
+				
+				A = Y;
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
 			
 
 			
