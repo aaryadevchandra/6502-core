@@ -194,7 +194,12 @@ STY_ZPX = 0x94,
 STY_AB = 0x8C,
 
 TAX_IMPLIED = 0xAA,
-TAY_IMPLIED = 0xA8;
+TAY_IMPLIED = 0xA8,
+
+TSX_IMPLIED = 0xBA,
+TXA_IMPLIED = 0x8A,
+TXS_IMPLIED = 0x9A,
+TYA_IMPLIED = 0X98;
 		
 		
 
@@ -2894,6 +2899,18 @@ TAY_IMPLIED = 0xA8;
 				
 			}
 			break;
+
+			case TSX_IMPLIED:
+			{
+				fetch_byte(mem);
+
+				X = stack_pointer;
+
+				LDA_SET_FLAGS();
+			}
+			break;
+
+			
 
 			
 
