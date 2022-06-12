@@ -23,6 +23,6 @@ _________________________________________________
 
 - Information related to [addressing modes in the 6502](http://www.emulator101.com/6502-addressing-modes.html) 
 
-- And at last, the absolute goldmine of a website is [this]([https://nesdev.com/6502_cpu.txt](https://cdn.discordapp.com/attachments/762386959389556760/985527779858739240/https___www.nesdev.com_6502_cpu.txt.pdf)), with detailed information on what each cycle in the 6502 does for _every instruction_ and _for every addressing mode of an instruction_. This site is hands-down the best resource for 6502 development.
+- And at last, the absolute goldmine of a website is [this](https://cdn.discordapp.com/attachments/762386959389556760/985527779858739240/https___www.nesdev.com_6502_cpu.txt.pdf), with detailed information on what each cycle in the 6502 does for _every instruction_ and _for every addressing mode of an instruction_. This site is hands-down the best resource for 6502 development.
 
 - Another possible resource which would _have_ to be mentioned is the [official 6502 manual](https://archive.org/details/mos_microcomputers_programming_manual/mode/2up) from MOS Technologies. 
